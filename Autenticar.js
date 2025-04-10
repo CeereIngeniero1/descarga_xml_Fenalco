@@ -1,4 +1,12 @@
 import soap from 'soap';
+import fs from 'fs';
+import path, {dirname} from 'path';
+import  { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
 
 const wsdlUrl = 'https://factible.fenalcoantioquia.com/FactibleWebService/FacturacionWebService?wsdl';
 var Token ;
@@ -34,47 +42,12 @@ soap.createClient(wsdlUrl, (err, client) => {
     
 });
 
-// function prueba (token){
-//     console.log("   Este es el token ", token);
-// var listfacturas = [18909,18910, 18911];
-// let Parametros = {
-//     token: token,  
-//     idnumeracion: 6974,  
-//     numero: listfacturas
-// };
 
-//     soap.createClient(wsdlUrl, (err, client) => {
-//         if (err) {
-//             console.error('Error al crear el cliente SOAP:', err);
-//             return;
-//         }
-        
-//         client.setEndpoint('https://factible.fenalcoantioquia.com/FactibleWebService/FacturacionWebService');
-        
-//         client.obtenerApplicationResponseyAttachedDocument2(Parametros, (err, result) => {
-//             if (err) {
-//                 console.error('Error al obtenerApplicationResponseyAttachedDocument2:', err);
-//                 return;
-//             }
-            
-//             try {
-//                 const response = JSON.parse(result.return);
-//                 console.log('El xml en base 64 es : ', response.data.attachedDocument );
-                
-//             } catch (parseError) {
-//                 console.error('Error al parsear la respuesta:', parseError);
-//             }
-//         });
-    
-        
-//     });
-
-
-// }
 
 function prueba(token) {
     console.log("   Este es el token ", token);
-    var listfacturas = [18909, 18910, 18911];
+    // var listfacturas = [18909, 18910, 18911];
+    var listfacturas = [18909];
     // var listfacturas = []  ;
     // for (let index = 18800; index < 18911; index++) {
 
@@ -83,6 +56,9 @@ function prueba(token) {
     
     console.log(listfacturas);
     let promises = listfacturas.map(numero => {
+        // let carpeta = path.join(__dirname, 'Xmls');
+        var carpeta = path.join(__dirname, 'Xmls');
+
         let Parametros = {
             token: token,  
             idnumeracion: 6974,  
@@ -99,6 +75,8 @@ function prueba(token) {
                 client.setEndpoint('https://factible.fenalcoantioquia.com/FactibleWebService/FacturacionWebService');
 
                 client.obtenerApplicationResponseyAttachedDocument2(Parametros, (err, result) => {
+                    const archivo = path.join(carpeta, numero.toString());
+
                     if (err) {
                         console.error(`Error al obtener ApplicationResponseyAttachedDocument2 para la factura ${numero}:`, err);
                         return reject(err);
@@ -106,7 +84,17 @@ function prueba(token) {
 
                     try {
                         const response = JSON.parse(result.return);
-                        console.log(`Factura ${numero} - XML en base 64:`, response.data.attachedDocument);
+                        // console.log(`Factura ${numero} - XML en base 64:`, response.data.attachedDocument);
+                        // console.log(`Factura ${numero} - XML en base 64:`, response.data.attachedDocument);
+                        let base64 = response.data.attachedDocument;
+                        let buffer = Buffer.from(base64, 'base64');
+                        let xmlcontenido = buffer.toString('utf8');
+                        // console.log(xmlcontenido);
+                        if(!fs.existsSync(carpeta)){
+                            fs.mkdirSync(carpeta, { recursive: true});
+                        }
+                        
+                        fs.writeFileSync(archivo, xmlcontenido, 'utf8');
                         resolve(response.data.attachedDocument);
                     } catch (parseError) {
                         console.error(`Error al parsear la respuesta de la factura ${numero}:`, parseError);
