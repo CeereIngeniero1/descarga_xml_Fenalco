@@ -75,7 +75,7 @@ function prueba(token) {
                 client.setEndpoint('https://factible.fenalcoantioquia.com/FactibleWebService/FacturacionWebService');
 
                 client.obtenerApplicationResponseyAttachedDocument2(Parametros, (err, result) => {
-                    const archivo = path.join(carpeta, numero.toString());
+                    const archivo = path.join(carpeta, `${numero.toString()}.xml` );
 
                     if (err) {
                         console.error(`Error al obtener ApplicationResponseyAttachedDocument2 para la factura ${numero}:`, err);
